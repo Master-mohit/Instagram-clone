@@ -3,13 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     <title>Comments</title>
 </head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    html, body {
+        width: 100%;
+        height: 100%;
+    }
+    #main {
+        width: 100%;
+        height: 100%;
+        /* background-color: red; */
+    }
+    #box {
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.934);
+        color: #fff;
+        padding: 3vw;
+    }
+    #upper-part {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #upper-part h1 {
+        font-size: 6vw;
+        padding: 2vw;
+    }
+    #conversation {
+        width: 100%;
+        height: 85vh;
+        /* background-color: blue; */
+        padding: 10vw 4vw;
+        overflow-y: auto; /* Added to enable vertical scrolling */
+    }
+    #conversation #aanevale{
+        width: fit-content;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5vw; /* Moved from #conversation #aanevale */
+    }
+    #conversation #bhejnevale h2{
+        font-size: 5.5vw;
+    }
+    #conversation #aanevale h1{
+        font-size: 5.5vw;
+    }
+    #conversation #bhejnevale{
+        width: fit-content;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5vw;
+        margin-left: auto;
+    }
+    #conversation img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        /* background-color: red; */
+    }
+    #bottom-part{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        /* background-color: lightcyan; */
+    }
+    #bottom-part1{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2vw 4vw;
+    }
+    #bottom-part1 input{
+        padding: 2vw 4vw;
+        border-radius: 10px;outline: none;
+        border: none;
+    }
+    #bottom-part1 img{
+       width: 50px;
+       height: 50px;
+       border-radius: 50%;
+       background-color: red;
+    }
+    #commentInput{
+        margin-right: 4vw;
+    }
+</style>
 <body>
+<div id="main">
+    <div id="box">
+        <div id="upper-part">
+            <h1>Comments</h1>
+        </div>
+        <div id="conversation">
+            <!-- Comments will be dynamically added here -->
+            <!-- <div id="aanevale">
+                <img src="" alt="">
+                <h1>mst lag rhe ho</h1>
+            </div> -->
+            <!-- <div id="bhejnevale">
+                <img src="" alt="">
+                <h2>thankuh bro</h2>
+            </div> -->
+        </div>
+        <div id="bottom-part">
+            <div id="bottom-part1">
+                <img src="" alt="">
+                <input type="text" id="commentInput" placeholder="comment">
+                <input type="button" onclick="sendMessage()" value="send">
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js" integrity="sha512-NQfB/bDaB8kaSXF8E77JjhHG5PM6XVRxvHzkZiwl3ddWCEPBa23T76MuWSwAJdMGJnmQqM0VeY9kFszsrBEFrQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    var socket = io();
 
-        <form action="/comments" method="POST">
-            <textarea name="comment" id="comment" cols="30" rows="10"></textarea>
-            <button type="submit">Post Comment</button>
-        </form>
+    function sendMessage() {
+        const input = document.querySelector("#commentInput").value;
+        const commentElement = `
+            <div id="bhejnevale">
+                <img src="" alt="">
+                <h2>${input}</h2>
+            </div>`;
+        document.querySelector("#conversation").innerHTML += commentElement;
+        document.querySelector("#commentInput").value = null;
+        socket.emit("max", input);
+    }
+
+    socket.on("sony", function(chalioo) {
+        aanevalemesska(chalioo, '<%= profileImage %>'); 
+        console.log(chalioo);
+    });
+
+    function aanevalemesska(helioooo, profileImage){
+        const reciver = `
+            <div id="aanevale">
+                <img src="${profileImage}" alt="Profile Picture">
+                <h1>${helioooo}</h1>
+            </div>`;
+        document.querySelector("#conversation").innerHTML += reciver;
+    }
+</script>
 </body>
 </html>

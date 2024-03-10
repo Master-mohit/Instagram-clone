@@ -1,0 +1,111 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+    <title>Document</title>
+</head>
+<style>
+    *{
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    html, body{
+        width: 100%;
+        height: 100%;
+        background-color: red;
+    }
+</style>
+<body>
+    <div id="rappper">
+     <div id="top">
+        <h1><i class="ri-arrow-left-line"></i></h1>
+        <h2>All Posts</h2>
+        <div id="menuu">
+            <h1><i class="ri-more-2-fill"></i></h1>
+        </div>
+     </div>
+     <div id="save-post">
+        <img src="" alt="">
+        <img src="" alt="">
+        <img src="" alt="">
+     </div>
+    </div>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Instagram Save</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<style>body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .container #top-part{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .save-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding-left: 10vw;
+  }
+  
+  .save-options .photo {
+    text-align: center;
+  }
+  
+  .save-options img {
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+  }
+  
+  .save-options span {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  </style>
+<body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>tittle</title>
+      <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class="container">
+            <div id="top-part">
+              <h1><iclass="ri-arrow-left-line"></i></h1>
+              <h2>Saved Posts</h2>
+            </div>
+            <div class="save-options">
+              <% savedPosts.reverse().forEach(function(savedPost) { %>
+                <div class="photo">
+                  <img src="/images/uploads/<%= savedPost.picture %>" alt="">
+                </div>
+              <% }) %>
+            </div>
+          </div>
+          
+    </body>
+    </html>
+    
+</body>
+</html>
