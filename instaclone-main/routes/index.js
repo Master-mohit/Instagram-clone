@@ -1,11 +1,14 @@
 var express = require('express');
 var router = express.Router();
 const usermodel = require("./users");
-const postmodel = require("./post")
+const postmodel = require("./post");
 const commentmodel = require("./comments")
+const savemodel = require("./saved");
 const passport = require('passport');
 const localStrategy = require("passport-local");// allow  krta h ki username or pass. ke basic me account bna ske 
 const upload = require("./multer");
+
+
 
 
 
@@ -19,28 +22,43 @@ router.get('/login', function(req, res) {
   res.render('login', {footer: false});
 });
 
-router.get('/feed',isLoggedIn, async function(req, res) {
- const posts = await postmodel.find().populate("user");
- const user = await usermodel.findOne({ username: req.session.passport.user });
-  res.render('feed', {footer: true, posts, user});
+router.get('/feed', isLoggedIn, async function(req, res) {
+  try {
+    const posts = await postmodel.find().populate("user");
+    const user = await usermodel.findOne({ username: req.session.passport.user });
+    res.render('feed', { footer: true, posts, user });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-router.get('/profile', isLoggedIn,async function(req, res) {
-  const user = await usermodel.findOne({ username: req.session.passport.user }).populate("posts")
+
+// /profile Route
+router.get('/profile', isLoggedIn, async function(req, res) {
+  const user = await usermodel.findOne({ username: req.session.passport.user }).populate("posts");
   res.render('profile', {footer: true, user});
 });
 
+router.get('/comments', isLoggedIn, async function(req, res) {
+  const user = await usermodel.findOne({ username: req.session.passport.user }).populate("posts");
+  res.render('comments', {footer: true, user});
+});
+
+router.get('/save', isLoggedIn, async function(req, res) {
+  res.render('save', {footer: true});
+});
+
+// /profile/:user Route
 router.get('/profile/:user', isLoggedIn, async function(req, res) {
-  const user = await usermodel.findOne({ username: req.session.passport.user });
- 
-  if (user.username == req.params.user) {
-    res.redirect("/profile");
+  const user = await usermodel.findOne({ username: req.params.user }).populate("posts");
+  const loggedInUser = await usermodel.findOne({ username: req.session.passport.user });
+  
+  if (!user) {
+    return res.redirect('/profile'); // Redirect to logged in user's profile if user not found
   }
 
-  const userprofile = await usermodel.findOne({ username: req.params.user }).populate("posts");
-  res.render('userprofile', { footer: true, userprofile, user }); // User object ko bhi pass karo
-  
-
+  res.render('userprofile', { footer: true, userprofile: user, user: loggedInUser });
 });
 
 
@@ -72,6 +90,7 @@ router.get('/search',isLoggedIn, async function(req, res) {
   const user = await usermodel.findOne({ username: req.session.passport.user }).populate("posts")
   res.render('search', {footer: true, user});
 });
+
 
 
 router.get('/edit', isLoggedIn, async function(req, res) {
@@ -171,50 +190,85 @@ router.post('/upload',isLoggedIn, upload.single("image"), async function(req, re
 
 });
 
-router.post('/comment/:id', isLoggedIn, async function(req, res) { 
-  const user = await usermodel.findOne({ username: req.session.passport.user });
-  const post = await postmodel.findById(req.params.postid);
-  const comment = new commentmodel({
-          text: req.body.text,
-          user: user._id,
-          post: post._id,
-        });
-        await comment.save();
-    
-        res.redirect("/");
-  // const comment = await commentmodel.findOneAndUpdate({username: req.session.passport.user},{text: req.body.text, user: user._id, _id: req.params.id},{new: true}
-  //   )
-  //   await comment.save();
+router.post('/comments/:id', isLoggedIn, async function(req, res) { 
+  try {
+    console.log("Entered /comments/:id route handler");
 
+    const user = await usermodel.findOne({ username: req.session.passport.user });
+    console.log("User found:", user);
 
+    const post = await postmodel.findById(req.params.id)
+    console.log("Post found:", post);
 
-//     // 5. Redirect karein ya kuch response bhejein
-//     res.redirect("/"); // ya kuch aur response bhejein
-//   } catch (error) {
-//     console.error("Error:", error);
-//     res.status(500).json({ error: "Internal server" });
-//   }
-// });
-// // Server Side
-// router.post('/posts/:postId/comments', (req, res) => {
-//   const postId = req.params.postId;
-//   Post.findById(postId).populate('comments')
-//     .then(post => {
-//       if (!post) {
-//         return res.status(404).json({ error: 'Post not found.' });
-//       }
-//       const comments = post.comments;
-//       res.status(200).json({ comments });
-//     })
-//     .catch(error => {
-//       console.error('Error fetching comments:', error);
-//       res.status(500).json({ error: 'Internal server error.' });
-//     });
-  console.log(req.params.id);
-  console.log(req.body.comment);
+    if (!post) {
+      console.log("Post not found. Sending 404 response.");
+      return res.status(404).send('Post not found');
+    }
 
+    const comment = new commentmodel({
+      text: req.body.comment,
+      user: user._id,
+      post: post._id,
+    });
 
+    await comment.save();
+    console.log("Comment saved:", comment);
+
+    // Push the comment's ID to the post's comments array
+    post.comments.push(comment._id);
+    await post.save();
+
+    console.log("Comment ID pushed to post's comments array.");
+
+    res.redirect("/feed"); // Redirect after saving the comment
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Internal Server Error');
+  }
 });
+
+// Define route to handle saving post
+router.get('/save/:id', isLoggedIn, async function(req, res) {
+  try {
+    // Find the currently logged in user
+    const user = await usermodel.findOne({ username: req.session.passport.user });
+    console.log("User found:", user);
+
+    // Extract the post ID from the request parameters
+    const postId = req.params.id;
+
+    // Find the post based on the extracted ID
+    const post = await postmodel.findById(postId);
+    console.log("Post found:", post);
+
+    // Check if the post exists
+    if (!post) {
+      console.log("Post not found. Sending 404 response.");
+      return res.status(404).send('Post not found');
+    }
+
+    // Create a new instance of savemodel and save the post ID
+    const savemodelInstance = new savemodel({
+      post: postId
+    });
+
+    // Save the savemodel instance to the database
+    const savedPost = await savemodelInstance.save();
+
+    // Push the saved post's ID to the user's saved array
+    user.saved.push(savedPost._id);
+    await user.save();
+
+    console.log("Post ID pushed to user's saved array.");
+
+    // Redirect the user to the feed page
+    res.redirect("/feed");
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 

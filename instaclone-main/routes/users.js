@@ -18,16 +18,8 @@ stories: [
       ref: "story" 
     }
   ],
-  saved: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "post" 
-    }
-  ],
-  posts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "post" 
-  }],
+  saved: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],
+
   followers: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -40,12 +32,6 @@ stories: [
       ref: "user" 
     }
   ],
-  comments: [
-    {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment" 
-    }
-],
 });
 
 userSchema.plugin(plm) // userSchema.plugin(plm); ka matlab hai ki passport-local-mongoose plugin ko userSchema par apply kar rahe hain. Isse userSchema me kuch additional functionality add ho jati hai jo Passport.js ke sath user authentication ko simplify karta hai.

@@ -91,9 +91,10 @@
                 <i class="ri-heart-3-line"></i>
               <% } %>
             </a>
-            <a id="commentbtn" href="/comment"><i class="ri-chat-3-line"></i></a>
+            
+            <!-- <a id="commentbtn" href="/comment"><i class="ri-chat-3-line"></i></a> -->
 
-            <form id="commentform" action="/comment/<%= elem._id %>" class="w-full h-full" enctype="multipart/form-data" method="post">
+            <form id="commentform" action="/comments/<%=elem._id%>" class="w-full h-full" method="post">
         <input hidden type="file" name="commentpost" >
         <textarea name="comment"  class="px-2 py-1 w-full bg-zinc-900 border-2 h-20 border-zinc-800 resize-none rounded-md outline-none" 
         placeholder="Write a text..."></textarea>
@@ -102,13 +103,13 @@
           
               <i class="ri-share-circle-line"></i>
             </div>
-           <i class="ri-bookmark-line"></i>
+              <a href="/save/<%=elem._id%>"><i class="ri-bookmark-line"></i></a>
           </div>
           <h3 class="px-4 mt-2 text-sm leading-none tracking-tight"><%= elem.likes.length %>likes</h3>
           <h2 class="text-white font-light text-sm mt-2"><span class="font-semibold pl-4 pr-2"><%= elem.user.username%></span><%= elem.caption %></h2>
         </div>
       <% }) %>
-    </div>
+    </div>  
   </div>
 
  
