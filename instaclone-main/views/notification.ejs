@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .notification {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .notification p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .notification p span {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <h1>Notifications</h1>
+        <div id="notifications">
+            <% notifications.forEach(notification => { %>
+                <div class="notification">
+                    <% if (notification.type === 'like') { %>
+                        <p><span><%= notification.user.username %></span> liked your post.</p>
+                    <% } else if (notification.type === 'comment') { %>
+                        <p><span><%= notification.user.username %></span> commented on your post.</p>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</body>
+</html>

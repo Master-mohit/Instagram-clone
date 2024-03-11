@@ -8,6 +8,7 @@ const passport = require('passport');
 const localStrategy = require("passport-local");// allow  krta h ki username or pass. ke basic me account bna ske 
 const upload = require("./multer");
 const socketIo = require('socket.io');
+const notification = require('./notification');
 
 
 
@@ -52,9 +53,6 @@ router.get('/comments', isLoggedIn, async function(req, res) {
   }
 });
 
-
-
-
 router.get('/saved', isLoggedIn, async function(req, res) {
   try {
     // Fetch the saved posts for the current user
@@ -71,7 +69,10 @@ router.get('/saved', isLoggedIn, async function(req, res) {
   }
 });
 
-// /profile/:user Route
+// router.get('/notification', isLoggedIn, async function(req, res) {
+//   res.render('notification', {footer: true});
+// });
+
 router.get('/profile/:user', isLoggedIn, async function(req, res) {
   const user = await usermodel.findOne({ username: req.params.user }).populate("posts");
   const loggedInUser = await usermodel.findOne({ username: req.session.passport.user });
@@ -131,22 +132,55 @@ router.get('/username/:username', isLoggedIn, async function(req, res) {
  res.json(users);
 });
 
-router.get("/like/post/:id",isLoggedIn,async function(req, res) {
-  const user = await usermodel.findOne({ username: req.session.passport.user });//login user mil gya user ke under..
-  const post = await postmodel.findOne({_id: req.params.id});//id find krna jis post me like kr rha h
+router.get("/like/post/:id", isLoggedIn, async function(req, res) {
+  try {
+    // Find the logged-in user
+    const user = await usermodel.findOne({ username: req.session.passport.user });
 
-  //agr like h to remove like 
-  //agr ni h like to like it.
-  if (post.likes.indexOf(user._id) === -1){ //likes array me user ki id ko dhud rhe h agr khali h to like kro.
-    post.likes.push(user._id);
+    // Find the post being liked
+    const post = await postmodel.findOne({ _id: req.params.id }).populate('user');
 
+    if (!post) {
+      // If the post is not found, send a 404 response
+      return res.status(404).send('Post not found');
+    }
+
+    // Check if the post is already liked by the user
+    const isLiked = post.likes.includes(user._id);
+
+    // Toggle the like functionality
+    if (!isLiked) {
+      // If the post is not liked, add the user to the likes array
+      post.likes.push(user._id);
+
+      // Save the post
+      await post.save();
+
+      // Create a notification for the like
+      const notification = new notificationModel({
+        user: post.user._id, // User who created the post
+        type: 'like',
+        postId: post._id,
+        likedBy: user._id // User who liked the post
+      });
+
+      await notification.save(); // Save the notification
+    } else {
+      // If the post is already liked, remove the like
+      post.likes = post.likes.filter(userId => userId.toString() !== user._id.toString());
+
+      // Save the post
+      await post.save();
+    }
+
+    // Redirect to the feed page after liking/unliking
+    res.redirect("/feed");
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Internal Server Error');
   }
-  else {
-    post.likes.splice(post.likes.indexOf(user._id), 1);//index nikal kr dega or kitne like hatana h..
-  }
-  await post.save(); //push and splice dono hath se kiye h to save krna pdega..
-  res.redirect("/feed")
 });
+
 
 
 router.post("/register", function(req, res, next){
@@ -256,13 +290,15 @@ router.get('/save/:id', isLoggedIn, async function(req, res) {
     const user = await usermodel.findOne({ username: req.session.passport.user });
 
     // Check if the post is already saved by the user
-    const isSaved = user.saved.some(savedPost => savedPost.toString() === postId);
+    const isSaved = user.saved.includes(postId);
+    
+    // Toggle the save functionality
     if (isSaved) {
-      return res.redirect('/feed'); // If already saved, redirect back to feed
+      user.saved.splice(user.saved.indexOf(postId), 1); // Remove the post from saved
+    } else {
+      user.saved.push(postId); // Add the post to saved
     }
 
-    // Push the post ID to the user's saved array
-    user.saved.push(postId);
     await user.save();
 
     console.log("Post ID pushed to user's saved array.");
@@ -274,6 +310,44 @@ router.get('/save/:id', isLoggedIn, async function(req, res) {
     res.status(500).send('Internal Server Error');
   }
 });
+
+router.get('/notification', isLoggedIn, async function(req, res) {
+  try {
+    const user = await usermodel.findOne({ username: req.session.passport.user }).populate("posts"); // User ko retrieve karein aur uski posts ko populate karein
+
+    const notifications = [];
+
+    // Iterate over user's posts
+    user.posts.forEach(post => {
+      // Iterate over likes for each post
+      post.likes.forEach(like => {
+        // Populate the user information for the like
+        notifications.push({
+          type: 'like',
+          post: post._id,
+          likedBy: like // User jo like kiya hai
+        });
+      });
+    });
+
+    // Now iterate over notifications and populate the likedBy user's information
+    for (let i = 0; i < notifications.length; i++) {
+      const notification = notifications[i];
+      const likedByUser = await usermodel.findById(notification.likedBy);
+
+      // Update the notification object with likedBy user's information
+      notification.likedByUsername = likedByUser.username;
+      notification.likedByProfileImage = likedByUser.profileImage;
+    }
+
+    res.render('notification', { footer: true, notifications }); // Notifications ko render karein
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 
 
 

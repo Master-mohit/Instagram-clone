@@ -18,6 +18,11 @@ stories: [
       ref: "story" 
     }
   ],
+  notifications: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Notification"
+}],
+
   saved: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],
 
   followers: [
